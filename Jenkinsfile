@@ -17,7 +17,7 @@ pipeline {
             steps {
 
                 git branch: 'main',
-                url: 'https://github.com/company/network-devops.git'
+                url: 'git@github.com:yogar41/network-devops.git', credentialId: 'yoga-github-cred'
             }
         }
 
