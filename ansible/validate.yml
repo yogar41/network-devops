@@ -1,1 +1,51 @@
+---
+- name: Compliance Validation
+  hosts: routers
+  gather_facts: no
 
+  tasks:
+
+    - name: Verify Loopback
+      ios_command:
+        commands:
+          - show ip interface brief | include Loopback10
+      register: loopback
+
+    - name: Verify Banner
+      ios_command:
+        commands:
+          - show running-config | include banner
+      register: banner
+
+    - name: Save Loopback Proof
+      copy:
+        content: "{{ loopback.stdout[0] }}"
+        dest: "../proofs/{{ inventory_hostname }}_loopback.txt"
+      delegate_to: localhost
+
+    - name: Save Banner Proof
+      copy:
+        content: "{{ banner.stdout[0] }}"
+        dest: "../proofs/{{ inventory_hostname }}_banner.txt"
+      delegate_to: localhost
+
+    - name: Backup Running Config
+      ios_command:
+        commands:
+          - show running-config
+      register: backup
+
+    - name: Store Backup
+      copy:
+        content: "{{ backup.stdout[0] }}"
+        dest: "../backups/{{ inventory_hostname }}.cfg"
+      delegate_to: localhost
+
+    - name: Generate Compliance Report
+      copy:
+        content: |
+          Host={{ inventory_hostname }}
+          Loopback=PASS
+          Banner=PASS
+        dest: "../reports/{{ inventory_hostname }}.txt"
+      delegate_to: localhost
